@@ -111,7 +111,9 @@ if (argv.watchTs) {
 
   fs.writeFileSync(newTsconfigPath, JSON.stringify(tsconfig, null, '\t'));
 
-  exec(tscCommand);
+  exec(tscCommand, (err) => {
+    console.error(err);
+  });
 }
 
 const watcher = chokidar.watch(sourcePath, { ignoreInitial: true });
