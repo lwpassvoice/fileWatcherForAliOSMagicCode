@@ -82,7 +82,11 @@ const sourcePath = relativeSourcePath.map((v) => path.resolve(projectPath, './' 
 const tscFilePath = argv.tscFilePath || 'C:/.sdk/tools/etsc/tsc.js';
 
 // 初始化日志
-exec(`adb -host shell logctl -p 3 && adb -host shell apr off`);
+exec(`adb -host shell logctl -p 3 && adb -host shell apr off`, (err) => {
+  if (err) {
+    console.error(err);
+  }
+});
 
 // 启动tsc自动编译
 if (argv.watchTs) {
@@ -112,7 +116,9 @@ if (argv.watchTs) {
   fs.writeFileSync(newTsconfigPath, JSON.stringify(tsconfig, null, '\t'));
 
   exec(tscCommand, (err) => {
-    console.error(err);
+    if (err) {
+      console.error(err);
+    }
   });
 }
 
