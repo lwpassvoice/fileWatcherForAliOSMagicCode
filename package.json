@@ -27,10 +27,10 @@
     "typescript": "^4.9.5"
   },
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "compile": "tsc ./index.ts",
-    "watch": "tsc ./watchFile.ts & node ./watchFile.js",
-    "watch:myJsApp": "tsc ./watchFile.ts & node ./watchFile.js --projectPath=F:/projects/myJsApp",
-    "watch:myTsApp": "tsc ./watchFile.ts & node ./watchFile.js --projectPath=F:/projects/myTsApp --watchTs --sourcePath=src,res",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "watch": "tsc ./index.ts & node ./index.js",
+    "watch:myJsApp": "tsc ./index.ts & node ./index.js --projectPath=F:/projects/myJsApp",
+    "watch:myTsApp": "tsc ./index.ts & node ./index.js --projectPath=F:/projects/myTsApp --watchTs --sourcePath=src,res"
   }
 }
