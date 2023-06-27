@@ -1,9 +1,10 @@
 import { Observable, Subject } from 'rxjs';
-import { buffer, concatMap, debounceTime } from 'rxjs/operators';
+import { buffer, concatMap, debounceTime, retry } from 'rxjs/operators';
 import * as chokidar from 'chokidar';
 import { exec } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as readline from 'readline';
 
 /**
  * 命令行参数
@@ -81,7 +82,7 @@ const sourcePath = relativeSourcePath.map((v) => path.resolve(projectPath, './' 
 // tsc文件绝对路径
 const tscFilePath = argv.tscFilePath || 'C:/.sdk/tools/etsc/tsc.js';
 
-// 初始化日志
+// 初始化日志 adb -host shell 'logctl -p 3 && apr off'
 exec(`adb -host shell logctl -p 3 && adb -host shell apr off`, (err) => {
   if (err) {
     console.error(err);
@@ -139,6 +140,32 @@ watcher.on('all', (eventName, path, stats?) => {
   }
 });
 
+/**
+ * 命令行输入
+ * @param {string} tips 
+ * @returns {promise}
+ * @example 多次输入
+ * function readSyncByRlFun() {
+ *  readSyncByRl().then((v: string) => {
+ *     readSyncByRlFun();
+ *   });
+ * }
+ * readSyncByRlFun();
+ */
+function readSyncByRl(tips = '>'): Promise<string> {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    rl.question(tips, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
 function executeUpdateFiles(changes: FileChange[]): Observable<string> {
   return new Observable((sub) => {
     // 临时生成的bat文件路径
@@ -193,12 +220,21 @@ function executeUpdateFiles(changes: FileChange[]): Observable<string> {
     exec(`"${batFilePath}"`, (e, stdout, stderr) => {
       fs.unlinkSync(batFilePath);
       if (e) {
-        console.error(e);
-        sub.next('error');
+        console.error(`exec failed: ${batFilePath}`, e);
+        // 更新失败手动确认重试
+        readSyncByRl('Update failed, retry? (Y/N)').then((inp) => {
+          const lc = inp.toLowerCase();
+          if (lc === 'y') {
+            sub.error(e);
+          } else {
+            sub.next('failed');
+            sub.complete();
+          }
+        });
       } else {
         sub.next('success');
+        sub.complete();
       }
-      sub.complete();
     });
   });
 }
@@ -206,7 +242,7 @@ function executeUpdateFiles(changes: FileChange[]): Observable<string> {
 // 延时后没有新修改，推入队列，触发更新
 fileChangeSubject.pipe(
   buffer(fileChangeSubject.pipe(debounceTime(DEFAULT_DELAY))),
-  concatMap(executeUpdateFiles),
+  concatMap((changes) => executeUpdateFiles(changes).pipe(retry())),
 ).subscribe((v) => {
   console.log(`--------- ${new Date().toLocaleString()} finished: ${v} ---------`);
 });
