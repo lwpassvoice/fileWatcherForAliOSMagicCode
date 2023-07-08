@@ -1,4 +1,4 @@
-# fileWatcherForAliOSMagicCode
+# fileWatcherForAliOSMagicCode AliOSMagicCode的文件监听器并改进功能
 ## 改进Magic Code Capability的watch功能
 Magic Code Capability自带的[watch](https://developers.alios.cn/reader/6/4133?refer=search)不是很好用，包括改动后会全局重新编译(甚至只是md的改动)、多次改动导致重复编译大量消耗cpu等
 
@@ -7,8 +7,9 @@ Magic Code Capability自带的[watch](https://developers.alios.cn/reader/6/4133?
 2. 使用了同步队列，上一次推送完成后，再进行下一次任务，减少文件混乱风险
 3. 可配置监听目录
 4. 纯js项目也能用
+5. 推送失败会暂停并询问是否继续推送
 
-### 典型流程：启动监听 => 文件修改 => [触发编译] => 收到src等文件变化 => 等待5s => 进入队列 => 推送文件 => 重启应用 => 完成
+### 典型流程：启动监听 => 文件修改 => 触发编译(可选) => 收到src等文件变化 => 等待5s => 进入队列 => 推送文件 => 重启应用 => 完成
 
 ### 注意：
 1. 首次使用或车机、电脑文件不同步时，需要先run app或全推文件到车机
