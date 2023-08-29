@@ -86,6 +86,17 @@ const tscFilePath = argv.tscFilePath || 'C:/.sdk/tools/etsc/tsc.js';
 exec(`adb -host shell logctl -p 3 && adb -host shell apr off`, (err) => {
   if (err) {
     console.error(err);
+  } else {
+    log('Log preference initialized!');
+  }
+});
+
+// 清除编译后文件
+exec(`adb -host shell "cd /opt/app/${appName} && rm -rf ${appName}.jso jso_file.list && cd res && rm -rf static_compile_list.json offline_compile_theme_list.json"`, (err) => {
+  if (err) {
+    console.error(err);
+  } else {
+    log('Jso files cleared!');
   }
 });
 
