@@ -6,6 +6,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
 
+function log(info: string) {
+  console.log(`------- ${new Date().toLocaleString()} ${info} -------`);
+}
+
 /**
  * 命令行参数
  * @param projectPath 项目本地绝对路径，默认使用'./'
@@ -46,7 +50,7 @@ interface FileChange {
 // 命令行参数
 const argv: Argv = require('minimist')(process.argv.slice(2));
 
-console.log(`------- ${new Date().toLocaleString()} init -------`);
+log('init');
 
 // 延时后没有新修改，会触发更新
 const DEFAULT_DELAY = 5000;
@@ -59,7 +63,7 @@ if (argv.projectPath) {
   projectPath = path.resolve('./');
 }
 
-console.log(`------- ${new Date().toLocaleString()} reading config from: ${projectPath}/manifest.json -------`);
+log(`reading config from: ${projectPath}/manifest.json`);
 
 // 读取项目的manifest
 const manifest = JSON.parse(fs.readFileSync(`${projectPath}/manifest.json`).toString());
@@ -138,7 +142,7 @@ const watcher = chokidar.watch(sourcePath, { ignoreInitial: true });
 const fileChangeSubject = new Subject<FileChange>();
 
 watcher.on('ready', () => {
-  console.log(`------- ${new Date().toLocaleString()} watching: ${sourcePath} -------`);
+  log(`watching: ${sourcePath}`);
 });
 
 watcher.on('all', (eventName, path, stats?) => {
@@ -215,7 +219,7 @@ function executeUpdateFiles(changes: FileChange[]): Observable<string> {
       }
     });
 
-    console.log(`--------- ${new Date().toLocaleString()} updating ---------`);
+    log('updating');
 
     // 判断batFilePath是否存在，存在则删除
     if (fs.existsSync(batFilePath)) {
@@ -255,5 +259,5 @@ fileChangeSubject.pipe(
   buffer(fileChangeSubject.pipe(debounceTime(DEFAULT_DELAY))),
   concatMap((changes) => executeUpdateFiles(changes).pipe(retry())),
 ).subscribe((v) => {
-  console.log(`--------- ${new Date().toLocaleString()} finished: ${v} ---------`);
+  log(`finished: ${v}`);
 });
