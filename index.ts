@@ -96,7 +96,7 @@ exec(`adb -host shell logctl -p 3 && adb -host shell apr off`, (err) => {
 });
 
 // 清除编译后文件
-exec(`adb -host shell "cd /opt/app/${appName} && rm -rf ${appName}.jso jso_file.list && cd res && rm -rf static_compile_list.json offline_compile_theme_list.json"`, (err) => {
+exec(`adb -host shell "cd /opt/app/${appName} && rm -rf ${appName}.jso jso_file.list && cd res && rm -rf static_compile_list.json offline_compile_theme_list.json ./default/layout/layout.json.js"`, (err) => {
   if (err) {
     console.error(err);
   } else {
