@@ -26,23 +26,40 @@ Magic Code Capability自带的[watch](https://developers.alios.cn/reader/6/4133?
 ```js
 /**
  * 命令行参数
- * @param projectPath 项目本地绝对路径，默认使用'./'
+ * @param projectPath 项目本地绝对路径。default(`./`)
  * @example --projectPath=F:/projects/cloudapp
  * 
- * @param watchTs 启动tsc自动编译，默认false
+ * @param watchTs 启动tsc自动编译。default(`false`)
  * @example --watchTs
  * 
- * @param sourcePath 推送的目录，使用','分隔，默认'src,res'
+ * @todo
+ * @param manualUpdate TODO: 手动更新，开启后将所有更新推到一个stack，
+ * 手动输入`update`后更新并清空stack。default(`false`)
+ * @example --manualUpdate
+ * 
+ * @param autoRestart 自动重启应用。default(`true`)
+ * @example --autoRestart
+ * 
+ * @param skipFirstUpdate 跳过第一次更新，通常用来跳过watchTs造成的编译更新
+ * @example --skipFirstUpdate
+ * 
+ * @param updateDelay 更新延时，延时后没有新修改，会触发更新。default(`5000`)
+ * @example --updateDelay=5000
+ * 
+ * @param delayAfterUpdate 每次更新后暂停时间。default(`5000`)
+ * @example --delayAfterUpdate=5000
+ * 
+ * @param sourcePath 推送的目录，使用`,`分隔。default(`src,res`)
  * @example --sourcePath=src,res
  * 
- * @param appName 应用名，默认取manifest.json的domain.name
+ * @param appName 应用名，默认取`manifest.json`的`domain.name`
  * @example --appName=myapp.cloudapp.com
  * 
- * @param pageLink 默认取manifest.json中的pages[0].uri
+ * @param pageLink 默认取`manifest.json`中的`pages[0].uri`
  * 
- * @param tscFilePath tsc文件绝对路径，默认为C:/.sdk/tools/etsc/tsc.js
+ * @param tscFilePath tsc文件绝对路径。default(`C:/.sdk/tools/etsc/tsc.js`)
  * 
- * @param tscWatchExcludeDirectories tsc watch 排除的文件目录，使用','分隔。默认使用['/node_modules', '/src', '/.vscode', '/res']
+ * @param tscWatchExcludeDirectories tsc watch 排除的文件目录，使用`,`分隔。default(`'/node_modules,/src,/.vscode,/res'`)
  */
 ```
 ### 可配合[Auto Run Command](https://github.com/GabiGrin/vscode-auto-run-command)插件，跟随vscode自启动：
