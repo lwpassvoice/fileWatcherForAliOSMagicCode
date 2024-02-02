@@ -175,7 +175,7 @@ exec(`adb -host shell logctl -p 3 && adb -host shell apr off`, (err) => {
 });
 
 // 清除编译后文件
-exec(`adb -host shell "cd /opt/app/${argv.appName} && rm -rf ${argv.appName}.jso jso_file.list && cd res && rm -rf static_compile_list.json offline_compile_theme_list.json ./default/layout/layout.json.js"`, (err) => {
+exec(`adb -host shell "cd /opt/app/${argv.appName} && rm -rf ${argv.appName}.jso jso_file.list && cd res && rm -rf static_compile_list.json offline_compile_theme_list.json ./default/layout/layout.json.js && find . -name *.xml.js | xargs rm -rf && find . -name *.json.js | xargs rm -rf && find . -name *.js.uglifymap | xargs rm -rf && rm res/default/theme/statictheme.js"`, (err) => {
   if (err) {
     console.error(err);
   } else {
@@ -316,7 +316,7 @@ fileChangeSubject.pipe(
   ),
   filter((_, idx) => {
     if (argv.skipFirstUpdate && idx < 1) {
-      log(`skiped the first update`);
+      log(`skipped the first update`);
       return false;
     }
     return true;
