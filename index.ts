@@ -233,7 +233,7 @@ watcher.on('all', (eventName, path, stats?) => {
 function executeUpdateFiles(changes: FileChange[]): Observable<string> {
   return new Observable((sub) => {
     // 临时生成的bat文件路径
-    const batFilePath = './temp.bat';
+    const batFilePath = `./${argv.appName}_temp.bat`;
 
     const commands = changes.map((v) => {
       // 本地相对路径
