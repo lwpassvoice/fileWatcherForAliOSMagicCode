@@ -1,10 +1,12 @@
 import { Observable, Subject } from 'rxjs';
 import { buffer, concatMap, debounceTime, delay, filter, retry } from 'rxjs/operators';
 import * as chokidar from 'chokidar';
-import { exec } from 'child_process';
+import { exec as execFunc } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
+import util = require('node:util');
+const exec = util.promisify(execFunc);
 
 function log(info: string) {
   console.log(`------- ${new Date().toLocaleString()} ${info} -------`);
@@ -83,6 +85,7 @@ interface Argv {
   delayAfterUpdate?: number;
   sourcePath?: string;
   appName?: string;
+  processName?: string;
   pageLink?: string;
   tscFilePath?: string;
   tscWatchExcludeDirectories?: string;
@@ -127,6 +130,7 @@ const defaultArgv: RequiredArgv = {
   manualUpdate: false,
   projectPath,
   appName: manifest.domain.name,
+  processName: manifest.pages[0].process_name,
   pageLink: manifest.pages[0].uri,
   tscWatchExcludeDirectories: '/node_modules,/src,/.vscode,/res',
   updateDelay: 5000,
@@ -166,7 +170,7 @@ if (argv.manualUpdate) {
 }
 
 // 初始化日志 adb -host shell 'logctl -p 3 && apr off'
-exec(`adb -host shell logctl -p 3 && adb -host shell apr off`, (err) => {
+execFunc(`adb -host shell logctl -p 3 && adb -host shell apr off`, (err) => {
   if (err) {
     console.error(err);
   } else {
@@ -175,7 +179,7 @@ exec(`adb -host shell logctl -p 3 && adb -host shell apr off`, (err) => {
 });
 
 // 清除编译后文件
-exec(`adb -host shell "cd /opt/app/${argv.appName} && rm -rf ${argv.appName}.jso jso_file.list && cd res && rm -rf static_compile_list.json offline_compile_theme_list.json ./default/layout/layout.json.js"`, (err) => {
+execFunc(`adb -host shell "cd /opt/app/${argv.appName} && rm -rf ${argv.appName}.jso jso_file.list && cd res && rm -rf static_compile_list.json offline_compile_theme_list.json ./default/layout/layout.json.js && find . -name *.xml.js | xargs rm -rf && find . -name *.json.js | xargs rm -rf && find . -name *.js.uglifymap | xargs rm -rf && rm res/default/theme/statictheme.js"`, (err) => {
   if (err) {
     console.error(err);
   } else {
@@ -202,11 +206,11 @@ if (argv.watchTs) {
   const tsconfig = JSON.parse(fs.readFileSync(`${projectPath}/tsconfig.json`).toString());
   tsconfig['watchOptions'] = watchOptions;
 
-  const tscCommand = `node ${argv.tscFilePath} -ta --sourcemap -p ${newTsconfigPath} --watch`;
+  const tscCommand = `node ${argv.tscFilePath} -ta --sourcemap -p ${newTsconfigPath} --watch --pretty`;
 
   fs.writeFileSync(newTsconfigPath, JSON.stringify(tsconfig, null, '\t'));
 
-  exec(tscCommand, (err) => {
+  execFunc(tscCommand, (err) => {
     if (err) {
       console.error(err);
     }
@@ -233,7 +237,7 @@ watcher.on('all', (eventName, path, stats?) => {
 function executeUpdateFiles(changes: FileChange[]): Observable<string> {
   return new Observable((sub) => {
     // 临时生成的bat文件路径
-    const batFilePath = './temp.bat';
+    const batFilePath = `./${argv.appName}_temp.bat`;
 
     const commands = changes.map((v) => {
       // 本地相对路径
@@ -283,11 +287,17 @@ function executeUpdateFiles(changes: FileChange[]): Observable<string> {
 
 
     if (argv.autoRestart) {
-      commands.push(`adb -host shell pkill -f ${argv.appName} && adb -host shell sendlink ${argv.pageLink}`);
+      // commands.push(`adb -host shell pkill -f ${argv.appName} && adb -host shell sendlink ${argv.pageLink}`);
+      if (argv.processName) {
+        commands.push(`adb -host shell killall ${argv.processName}`);
+      } else {
+        commands.push(`adb -host shell pkill -f ${argv.appName}`);
+      }
+      commands.push(`adb -host shell sendlink ${argv.pageLink}`);
     }
-    fs.appendFileSync(batFilePath, commands.join(''));
+    fs.appendFileSync(batFilePath, commands.join('\r\n'));
 
-    exec(`"${batFilePath}"`, (e, stdout, stderr) => {
+    execFunc(`"${batFilePath}"`, (e, stdout, stderr) => {
       fs.unlinkSync(batFilePath);
       if (e) {
         console.error(`exec failed: ${batFilePath}`, e);
@@ -316,7 +326,7 @@ fileChangeSubject.pipe(
   ),
   filter((_, idx) => {
     if (argv.skipFirstUpdate && idx < 1) {
-      log(`skiped the first update`);
+      log(`skipped the first update`);
       return false;
     }
     return true;
